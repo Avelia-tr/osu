@@ -6,6 +6,7 @@ using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu.Difficulty.Evaluators;
 using osu.Game.Rulesets.Osu.Difficulty.Preprocessing;
+using osu.Game.Rulesets.Difficulty.Skills;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,6 +20,7 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Skills
         private double skillMultiplier => 1375;
         private double strainDecayBase => 0.3;
 
+        private double rhythmMultiplier => 10;
         private double currentStrain;
         private double currentRhythm;
 
@@ -27,9 +29,13 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Skills
 
         private readonly List<double> objectStrains = new List<double>();
 
-        public Speed(Mod[] mods)
+        private readonly PatternEvaluator evaluator;
+
+
+        public Speed(Mod[] mods,double hitwindows )
             : base(mods)
         {
+            evaluator = new PatternEvaluator(hitwindows);
         }
 
         private double strainDecay(double ms) => Math.Pow(strainDecayBase, ms / 1000);
@@ -41,9 +47,9 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Skills
             currentStrain *= strainDecay(((OsuDifficultyHitObject)current).StrainTime);
             currentStrain += SpeedEvaluator.EvaluateDifficultyOf(current) * skillMultiplier;
 
-            currentRhythm = RhythmEvaluator.EvaluateDifficultyOf(current);
+            currentRhythm = evaluator.EvaluateDifficultyOf(((OsuDifficultyHitObject)current)) ;
 
-            double totalStrain = currentStrain * currentRhythm;
+            double totalStrain = currentStrain + currentRhythm;
 
             objectStrains.Add(totalStrain);
 

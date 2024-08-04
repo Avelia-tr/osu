@@ -12,6 +12,7 @@ using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu.Difficulty.Preprocessing;
+using osu.Game.Rulesets.Osu.Difficulty.Preprocessing.Patterns;
 using osu.Game.Rulesets.Osu.Difficulty.Skills;
 using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Osu.Objects;
@@ -115,27 +116,42 @@ namespace osu.Game.Rulesets.Osu.Difficulty
 
         protected override IEnumerable<DifficultyHitObject> CreateDifficultyHitObjects(IBeatmap beatmap, double clockRate)
         {
+            HitWindows hitWindows = new HitWindows();
+            hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
+
             List<DifficultyHitObject> objects = new List<DifficultyHitObject>();
+            List<OsuDifficultyHitObject> OsuDifficultyHitObjects = new List<OsuDifficultyHitObject>();
+            List<OsuDifficultyHitObject> noteObjects = new List<OsuDifficultyHitObject>();
+
 
             // The first jump is formed by the first two hitobjects of the map.
             // If the map has less than two OsuHitObjects, the enumerator will not return anything.
             for (int i = 1; i < beatmap.HitObjects.Count; i++)
             {
                 var lastLast = i > 1 ? beatmap.HitObjects[i - 2] : null;
-                objects.Add(new OsuDifficultyHitObject(beatmap.HitObjects[i], beatmap.HitObjects[i - 1], lastLast, clockRate, objects, objects.Count));
+                OsuDifficultyHitObject HitObject = new OsuDifficultyHitObject(beatmap.HitObjects[i],
+                 beatmap.HitObjects[i - 1], lastLast, clockRate, objects, noteObjects, objects.Count);
+                objects.Add(HitObject);
+                OsuDifficultyHitObjects.Add(HitObject);
             }
+
+            new OsuPatternPreprocessor(hitWindows, clockRate).ProcessAndAssign(OsuDifficultyHitObjects);
 
             return objects;
         }
 
         protected override Skill[] CreateSkills(IBeatmap beatmap, Mod[] mods, double clockRate)
         {
+            HitWindows hitWindows = new HitWindows();
+            hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
+
+
             var skills = new List<Skill>
             {
                 new Aim(mods, true),
                 new Aim(mods, false),
-                new Speed(mods)
-            };
+                new Speed(mods, hitWindows.WindowFor(HitResult.Great) / clockRate)
+            };            
 
             if (mods.Any(h => h is OsuModFlashlight))
                 skills.Add(new Flashlight(mods));

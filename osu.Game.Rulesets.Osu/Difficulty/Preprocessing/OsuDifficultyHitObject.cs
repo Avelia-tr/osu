@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
+using osu.Game.Rulesets.Osu.Difficulty.Preprocessing.Patterns;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Osu.Mods;
 using osu.Game.Rulesets.Osu.Objects;
@@ -13,8 +14,32 @@ using osuTK;
 
 namespace osu.Game.Rulesets.Osu.Difficulty.Preprocessing
 {
-    public class OsuDifficultyHitObject : DifficultyHitObject
+    public class OsuDifficultyHitObject : DifficultyHitObject , IHasInterval
     {
+
+        // taiko stuff
+
+        /// <summary>
+        /// The list of all <see cref="OsuDifficultyHitObject"/> that is either a regular note or finisher in the beatmap
+        /// </summary>
+        private readonly IReadOnlyList<OsuDifficultyHitObject> noteDifficultyHitObjects;
+
+        /// <summary>
+        /// The index of this <see cref="OsuDifficultyHitObject"/> in <see cref="noteDifficultyHitObjects"/>.
+        /// </summary>
+        public readonly int NoteIndex;
+
+        public readonly OsuPattern Pattern = new OsuPattern();
+
+        public double Interval => DeltaTime;
+
+        double IHasInterval.StartTime => StartTime;
+
+        double IHasInterval.EndTime => EndTime;
+        
+// end taiko stuff 
+
+
         /// <summary>
         /// A distance by which all distances should be scaled in order to assume a uniform circle size.
         /// </summary>
@@ -86,9 +111,22 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Preprocessing
         private readonly OsuHitObject? lastLastObject;
         private readonly OsuHitObject lastObject;
 
-        public OsuDifficultyHitObject(HitObject hitObject, HitObject lastObject, HitObject? lastLastObject, double clockRate, List<DifficultyHitObject> objects, int index)
+        public OsuDifficultyHitObject(HitObject hitObject, HitObject lastObject
+                                    , HitObject? lastLastObject, double clockRate, List<DifficultyHitObject> objects,
+                                    List<OsuDifficultyHitObject> noteObjects, int index)
             : base(hitObject, lastObject, clockRate, objects, index)
         {
+            noteDifficultyHitObjects = noteObjects;
+
+
+            if (!(hitObject is Spinner)) {
+                NoteIndex = noteObjects.Count;
+                noteObjects.Add(this);
+
+            }
+// end taiko stuff
+
+
             this.lastLastObject = lastLastObject as OsuHitObject;
             this.lastObject = (OsuHitObject)lastObject;
 
@@ -327,5 +365,10 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Preprocessing
 
             return pos;
         }
+        
+        public OsuDifficultyHitObject? PreviousNote(int backwardsIndex) => noteDifficultyHitObjects.ElementAtOrDefault(NoteIndex - (backwardsIndex + 1));
+
+        public OsuDifficultyHitObject? NextNote(int forwardsIndex) => noteDifficultyHitObjects.ElementAtOrDefault(NoteIndex + (forwardsIndex + 1));        
+
     }
 }
