@@ -17,7 +17,7 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Preprocessing
     public class OsuDifficultyHitObject : DifficultyHitObject , IHasInterval
     {
 
-        // taiko stuff
+// taiko stuff
 
         /// <summary>
         /// The list of all <see cref="OsuDifficultyHitObject"/> that is either a regular note or finisher in the beatmap
@@ -35,7 +35,7 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Preprocessing
 
         double IHasInterval.StartTime => StartTime;
 
-        double IHasInterval.EndTime => EndTime;
+        double IHasInterval.EndTime => StartTime;
         
 // end taiko stuff 
 

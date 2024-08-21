@@ -30,38 +30,17 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Preprocessing.Patterns
             // Group notes by their interval.
             List<FlatRhythmHitObjects> flatRhythmPatterns =
                 rhythmAggregator.Group<OsuDifficultyHitObject, FlatRhythmHitObjects>(hitObjects);
-            flatRhythmPatterns.ForEach(item => item.FirstHitObject.Pattern.FlatRhythmPattern = item);
+            flatRhythmPatterns.ForEach(item => item.Children.ForEach(note => note.Pattern.FlatRhythmPattern = item));
 
             // Second rhythm pass
             List<SecondPassRhythmPattern> secondPassRhythmPatterns =
                 rhythmAggregator.Group<FlatRhythmHitObjects, SecondPassRhythmPattern>(flatRhythmPatterns);
-            secondPassRhythmPatterns.ForEach(item => item.FirstHitObject.Pattern.SecondPassRhythmPattern = item);
+            secondPassRhythmPatterns.ForEach(item => item.Children.ForEach(second => second.Children.ForEach(note => note.Pattern.SecondPassRhythmPattern = item)));
 
             // Third rhythm pass
             List<ThirdPassRhythmPattern> thirdPassRhythmPatterns =
                 rhythmAggregator.Group<SecondPassRhythmPattern, ThirdPassRhythmPattern>(secondPassRhythmPatterns);
-            thirdPassRhythmPatterns.ForEach(item => item.FirstHitObject.Pattern.ThirdPassRhythmPattern = item);
-
-            // Within each flatRhythmPattern, group notes by colour.
-            
-            // List<DifficultyPattern> streams = streamAggregator.Aggregate(hitObjects);
-
-            // List<ColourSequence> colourSequences = new();
-            // foreach (var stream in streams)
-            // {
-            //     if (stream == null || stream.Children.Count() <= 5)
-            //     {
-            //         continue;
-            //     }
-
-            //     List<MonoPattern> monosInStream = colourAggregator.Group(stream.Children);
-            //     colourSequences.AddRange(
-            //         repetitionAggregator.Group<MonoPattern, ColourSequence>(monosInStream));
-            // }
-            // foreach (var item in colourSequences)
-            // {
-            //     item.FirstHitObject.Pattern.ColourSequence = item;
-            // }
+            thirdPassRhythmPatterns.ForEach(item => item.Children.ForEach(second => second.Children.ForEach(third => third.Children.ForEach(note => note.Pattern.ThirdPassRhythmPattern = item))));
 
         }
     }

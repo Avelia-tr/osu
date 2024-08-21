@@ -4,6 +4,7 @@
 using System;
 using osu.Game.Rulesets.Osu.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Osu.Difficulty.Preprocessing.Patterns;
+using osu.Game.Rulesets.Osu.Objects;
 
 
 namespace osu.Game.Rulesets.Osu.Difficulty.Evaluators
@@ -170,24 +171,41 @@ namespace osu.Game.Rulesets.Osu.Difficulty.Evaluators
         {
             double total = 0;
 
+            if (hitObject.BaseObject is Spinner) 
+            {
+                return 0;
+            }
+
             var pattern = hitObject.Pattern;
+
+            var firstpass = 1;
+
+            var secondpass = 1;
+
+            var thirdpass = 1;
 
             if (pattern.FlatRhythmPattern != null)
             {
-                total += 0.5 * Evaluate(pattern.FlatRhythmPattern);
+                firstpass = pattern.FlatRhythmPattern.Children.Count;
+
+                total += 0.5 * Evaluate(pattern.FlatRhythmPattern)/firstpass;
             }
 
             if (pattern.SecondPassRhythmPattern != null)
             {
-                total += 1 * Evaluate(pattern.SecondPassRhythmPattern);
+                secondpass = pattern.SecondPassRhythmPattern.Children.Count;
+
+                total += 1 * Evaluate(pattern.SecondPassRhythmPattern)/(firstpass*secondpass);
             }
 
             if (pattern.ThirdPassRhythmPattern != null)
             {
-                total += 2 * Evaluate(pattern.ThirdPassRhythmPattern);
+                thirdpass = pattern.ThirdPassRhythmPattern.Children.Count;
+
+                total += 2 * Evaluate(pattern.ThirdPassRhythmPattern)/(thirdpass * secondpass *firstpass);
             }
 
-            return total;
+            return total*100;
         }
     }
 }
